@@ -1,23 +1,39 @@
-# Object files
+# from ibus-tmpl
+*.pyc
+*.la
+*.lo
+*.loT
 *.o
-*.ko
-*.obj
-*.elf
-
-# Libraries
-*.lib
-*.a
-
-# Shared objects (inc. Windows DLLs)
-*.dll
 *.so
-*.so.*
-*.dylib
+*~
+tags
+Makefile.qmake
+Makefile
+Makefile.in
+.deps
+.libs
+ABOUT-NLS
+INSTALL
+aclocal.m4
+autom4te.cache
+compile
+config.guess
+config.h
+config.h.in
+config.log
+config.rpath
+config.status
+config.sub
+configure
+depcomp
+gtk-doc.make
+install-sh
+libtool
+ltmain.sh
+missing
+stamp-h1
+py-compile
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+ibus-fwnn*.tar.*
+ibus-fwnn.spec
+
