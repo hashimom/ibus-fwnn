@@ -38,7 +38,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f %{name}.lang
 %defattr(-,root,root,-)
-%doc AUTHORS COPYING README
+%doc AUTHORS COPYING README.md
 # %dir %{python_sitearch}/ibus
 # %{python_sitearch}/ibus/*
 %dir %{_datadir}/ibus-fwnn

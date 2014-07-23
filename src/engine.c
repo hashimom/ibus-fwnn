@@ -193,7 +193,6 @@ ibus_fwnn_engine_commit (IBusFwnnEngine *fwnn)
 	fwnn->cursor_pos = 0;
 
 	ibus_fwnn_engine_update (fwnn);
-
 	return TRUE;
 }
 
@@ -205,12 +204,10 @@ ibus_fwnn_engine_update (IBusFwnnEngine *fwnn)
 
 	text = ibus_text_new_from_static_string (fwnn->preedit->str);
 
-#if 0
-	/* 恐らく変換部の下線の設定。しかしドキュメントもなくKDEでは確認できていない。一旦残しておく。 */
 	text->attrs = ibus_attr_list_new ();    
 	ibus_attr_list_append (text->attrs,
 		ibus_attr_underline_new (IBUS_ATTR_UNDERLINE_SINGLE, 0, fwnn->preedit->len));
-
+#if 0
 	if (fwnn->preedit->len > 0) {
 		retval = fwnn_dict_check (dict, fwnn->preedit->str, fwnn->preedit->len);
 		if (retval != 0) {
@@ -233,46 +230,47 @@ ibus_fwnn_engine_update (IBusFwnnEngine *fwnn)
 
 static gboolean 
 ibus_fwnn_engine_process_key_event (IBusEngine *engine,
-                                       guint       keyval,
-                                       guint       keycode,
-                                       guint       modifiers)
+									guint		keyval,
+									guint		keycode,
+									guint		modifiers)
 {
-    int target_len = 0;
+	int target_len = 0;
 	IBusText *text;
-    IBusFwnnEngine *fwnn = (IBusFwnnEngine *)engine;
+	IBusFwnnEngine *fwnn = (IBusFwnnEngine *)engine;
 
-    if (modifiers & IBUS_RELEASE_MASK)
-        return FALSE;
+	if (modifiers & IBUS_RELEASE_MASK)
+		return FALSE;
 
-    modifiers &= (IBUS_CONTROL_MASK | IBUS_MOD1_MASK);
+	modifiers &= (IBUS_CONTROL_MASK | IBUS_MOD1_MASK);
+	if (modifiers == IBUS_CONTROL_MASK && keyval == IBUS_s) {
+		ibus_fwnn_engine_update_lookup_table (fwnn);
+		return TRUE;
+	}
 
-    if (modifiers == IBUS_CONTROL_MASK && keyval == IBUS_s) {
-        ibus_fwnn_engine_update_lookup_table (fwnn);
-        return TRUE;
-    }
+	if (modifiers != 0) {
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		else
+			return TRUE;
+	}
 
-    if (modifiers != 0) {
-        if (fwnn->preedit->len == 0)
-            return FALSE;
-        else
-            return TRUE;
-    }
+	switch (keyval) {
+	case IBUS_space:
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		return ibus_fwnn_engine_kanren (fwnn);
+	case IBUS_Return:
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		return ibus_fwnn_engine_commit (fwnn);
 
-
-    switch (keyval) {
-    case IBUS_space:
-        return ibus_fwnn_engine_kanren (fwnn);
-    case IBUS_Return:
-        return ibus_fwnn_engine_commit (fwnn);
-
-    case IBUS_Escape:
-        if (fwnn->preedit->len == 0)
-            return FALSE;
-
-        g_string_assign (fwnn->preedit, "");
-        fwnn->cursor_pos = 0;
-        ibus_fwnn_engine_update (fwnn);
-        return TRUE;        
+	case IBUS_Escape:
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		g_string_assign (fwnn->preedit, "");
+		fwnn->cursor_pos = 0;
+		ibus_fwnn_engine_update (fwnn);
+		return TRUE;        
 
 	case IBUS_Left:
 		if (fwnn->preedit->len == 0)
@@ -284,63 +282,63 @@ ibus_fwnn_engine_process_key_event (IBusEngine *engine,
 		}
 		return TRUE;
 
-    case IBUS_Right:
-        if (fwnn->preedit->len == 0)
-            return FALSE;
-        if (fwnn->cursor_pos < fwnn->preedit->len) {
-            fwnn->cursor_pos ++;
-            ibus_fwnn_engine_update (fwnn);
-        }
-        return TRUE;
+	case IBUS_Right:
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		if (fwnn->cursor_pos < fwnn->preedit->len) {
+			target_len = conv_get_bytesize_nextstr(fwnn->preedit, fwnn->cursor_pos);
+			syslog(LOG_INFO, "IBUS_Right: %d + %d -> %d", fwnn->cursor_pos, target_len, (fwnn->cursor_pos + target_len));
+			fwnn->cursor_pos = fwnn->cursor_pos + target_len;
+			ibus_fwnn_engine_update (fwnn);
+			
+		}
+		return TRUE;
     
-    case IBUS_Up:
-        if (fwnn->preedit->len == 0)
-            return FALSE;
-        if (fwnn->cursor_pos != 0) {
-            fwnn->cursor_pos = 0;
-            ibus_fwnn_engine_update (fwnn);
-        }
-        return TRUE;
-
-    case IBUS_Down:
-        if (fwnn->preedit->len == 0)
-            return FALSE;
-        
-        if (fwnn->cursor_pos != fwnn->preedit->len) {
-            fwnn->cursor_pos = fwnn->preedit->len;
-            ibus_fwnn_engine_update (fwnn);
-        }
-        
-        return TRUE;
+	case IBUS_Up:
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		if (fwnn->cursor_pos != 0) {
+			fwnn->cursor_pos = 0;
+			ibus_fwnn_engine_update (fwnn);
+		}
+		return TRUE;
+	
+	case IBUS_Down:
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		if (fwnn->cursor_pos != fwnn->preedit->len) {
+			fwnn->cursor_pos = fwnn->preedit->len;
+			ibus_fwnn_engine_update (fwnn);
+		}
+		return TRUE;
     
 	case IBUS_BackSpace:
 		if (fwnn->preedit->len == 0)
 			return FALSE;
 		if (fwnn->cursor_pos > 0) {
 			target_len = conv_get_bytesize_laststr(fwnn->preedit, fwnn->cursor_pos);
-			fwnn->cursor_pos = fwnn->preedit->len - target_len;
+			fwnn->cursor_pos = fwnn->cursor_pos - target_len;
 			g_string_erase (fwnn->preedit, fwnn->cursor_pos, target_len);
 			ibus_fwnn_engine_update (fwnn);
 		}
 		return TRUE;
     
-    case IBUS_Delete:
-        if (fwnn->preedit->len == 0)
-            return FALSE;
-        if (fwnn->cursor_pos < fwnn->preedit->len) {
-            g_string_erase (fwnn->preedit, fwnn->cursor_pos, 1);
-            ibus_fwnn_engine_update (fwnn);
-        }
-        return TRUE;
+	case IBUS_Delete:
+		if (fwnn->preedit->len == 0)
+			return FALSE;
+		if (fwnn->cursor_pos < fwnn->preedit->len) {
+			target_len = conv_get_bytesize_nextstr(fwnn->preedit, fwnn->cursor_pos);
+			g_string_erase (fwnn->preedit, fwnn->cursor_pos, target_len);
+			ibus_fwnn_engine_update (fwnn);
+		}
+		return TRUE;
 	}
 
 	if (is_alpha (keyval)) {
 		g_string_insert_c (	fwnn->preedit,
 							fwnn->cursor_pos,
 							keyval);
-		target_len = conv_run_romajiconv(fwnn->preedit, fwnn->cursor_pos);
-//		fwnn->cursor_pos = fwnn->cursor_pos + target_len;
-		fwnn->cursor_pos = fwnn->preedit->len;
+		fwnn->cursor_pos = conv_run_romajiconv(fwnn->preedit, fwnn->cursor_pos);
 		ibus_fwnn_engine_update (fwnn);
         
 		return TRUE;
