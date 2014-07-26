@@ -36,4 +36,6 @@ py-compile
 
 ibus-fwnn*.tar.*
 ibus-fwnn.spec
-
+fwnn.xml
+fwnn.xml.in
+ibus-engine-fwnn
