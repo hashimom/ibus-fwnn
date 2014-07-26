@@ -168,6 +168,7 @@ ibus_fwnn_engine_kanren (IBusFwnnEngine *fwnn)
 	kanren_p = fwnnserver_kanren(fwnn->preedit->str);
 	text = ibus_text_new_from_static_string (kanren_p);
 	g_string_assign (fwnn->preedit, text->text);
+	ibus_text_append_attribute(text, IBUS_ATTR_TYPE_FOREGROUND, 0x00FFFF, 0, fwnn->preedit->len);
 	ibus_engine_update_preedit_text ((IBusEngine *)fwnn,
 										text,
 										fwnn->cursor_pos,
@@ -240,12 +241,6 @@ ibus_fwnn_engine_process_key_event (IBusEngine *engine,
 
 	if (modifiers & IBUS_RELEASE_MASK)
 		return FALSE;
-
-	modifiers &= (IBUS_CONTROL_MASK | IBUS_MOD1_MASK);
-	if (modifiers == IBUS_CONTROL_MASK && keyval == IBUS_s) {
-		ibus_fwnn_engine_update_lookup_table (fwnn);
-		return TRUE;
-	}
 
 	if (modifiers != 0) {
 		if (fwnn->preedit->len == 0)

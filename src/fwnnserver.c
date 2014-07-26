@@ -26,9 +26,7 @@ static WNN_ENV *wnnenv;
 static struct wnn_ret_buf wnnbuf= {0, NULL};
 
 /* もちろん仮。malloc して返すように変更する予定 */
-char out_kanrenstr[MAX_CONV_STRLEN];
-static int out_kanrenstr_cnt = 0;
-char shin_out_kanrenstr[MAX_CONV_STRLEN];
+static char wnn_out_kanstr[MAX_CONV_STRLEN];
 
 static void set_wnn_env_pram()
 {
@@ -77,34 +75,42 @@ static void strtows(w_char *u, unsigned char *e)
 	*u=0;
 }
 
-static putwchar(unsigned short x)
+static int putws(unsigned short *s, char *outstr)
 {
-    out_kanrenstr[out_kanrenstr_cnt] = x >> 8;
-    out_kanrenstr[out_kanrenstr_cnt + 1] =  x;
-	out_kanrenstr_cnt = out_kanrenstr_cnt + 2;
-}
-
-static void putws(unsigned short *s)
-{
-    while(*s) putwchar(*s++);
+	int ret = 0;
+	
+	while(*s) {
+		outstr[ret] = *s >> 8;
+		outstr[ret + 1] =  *s;
+		ret = ret + 2;
+		s++;
+	}
+	return ret;
 }
 
 static void output_js2char(struct wnn_dai_bunsetsu *dlist, int cnt)
 {
-    int i;
-    struct wnn_sho_bunsetsu  *sbn;
+	int i, tmpbuf_len;
+	struct wnn_sho_bunsetsu  *sbn;
+	char kanstr_tmp[MAX_CONV_STRLEN];
+	char kanstr_utf8[MAX_CONV_STRLEN];
 
-	out_kanrenstr_cnt = 0;
     for ( ; cnt > 0; dlist++, cnt --) {
 		sbn = dlist->sbn;
 		for (i = dlist->sbncnt; i > 0; i--) {
-			putws(sbn->kanji); 
-			putws(sbn->fuzoku);
+			/* 単文節ごとに解析 */
+			memset(kanstr_tmp, '\0', MAX_CONV_STRLEN);
+			memset(kanstr_utf8, '\0', MAX_CONV_STRLEN);
+			tmpbuf_len = putws(sbn->kanji, kanstr_tmp); 
+			tmpbuf_len = putws(sbn->fuzoku, kanstr_tmp + tmpbuf_len);
+			
+			/* 文字コード変換して格納 */
+			exec_iconv(kanstr_tmp, kanstr_utf8, CONV_EUC2UTF8);
+			strncat(wnn_out_kanstr, kanstr_utf8, strlen(kanstr_utf8));
 			sbn++;
 		}
     }
 }
-
 
 int fwnnserver_open()
 {
@@ -171,18 +177,15 @@ char *fwnnserver_kanren(char *yomi)
 	
 	memset(yomi_euc, 0, MAX_CONV_STRLEN);
 	memset(upstrings, 0, MAX_CONV_STRLEN);
-	memset(out_kanrenstr, 0, MAX_CONV_STRLEN);
-	memset(shin_out_kanrenstr, 0, MAX_CONV_STRLEN);
+	memset(wnn_out_kanstr, 0, MAX_CONV_STRLEN);
 	
 	exec_iconv(yomi, yomi_euc, CONV_UTF82EUC);
 	strtows(upstrings, yomi_euc);
 	
 	count = js_kanren(wnnenv, upstrings, WNN_ALL_HINSI, NULL, WNN_VECT_KANREN, WNN_VECT_NO, WNN_VECT_BUNSETSU,&wnnbuf);
 	output_js2char((struct wnn_dai_bunsetsu *)wnnbuf.buf, count);
-	
-	exec_iconv(out_kanrenstr, shin_out_kanrenstr, CONV_EUC2UTF8);
-	
-	return shin_out_kanrenstr;
+
+	return wnn_out_kanstr;
 }
 
 
