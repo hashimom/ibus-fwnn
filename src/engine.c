@@ -228,6 +228,7 @@ ibus_fwnn_engine_update (IBusFwnnEngine *fwnn)
 
 
 #define is_alpha(c) (((c) >= IBUS_a && (c) <= IBUS_z) || ((c) >= IBUS_A && (c) <= IBUS_Z))
+#define is_symbol(c) ((c) >= IBUS_asterisk && (c) <= IBUS_at)
 
 static gboolean 
 ibus_fwnn_engine_process_key_event (IBusEngine *engine,
@@ -329,7 +330,7 @@ ibus_fwnn_engine_process_key_event (IBusEngine *engine,
 		return TRUE;
 	}
 
-	if (is_alpha (keyval)) {
+	if (is_alpha (keyval) || is_symbol (keyval)) {
 		g_string_insert_c (	fwnn->preedit,
 							fwnn->cursor_pos,
 							keyval);
