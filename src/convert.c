@@ -72,7 +72,8 @@ int conv_run_romajiconv(GString *gStr, gssize curpos)
 				if ((strncmp(search_p, RomCana[j].pre_str, i)) == 0) {
 					g_string_erase (gStr, conv_pos, RomCana[j].replace_size);
 					g_string_insert (gStr, conv_pos, RomCana[j].aft_str);
-					return (conv_pos + strlen(RomCana[j].aft_str));
+					/* 変換後のポジションを返すがあまりきれいなロジックではないので後で見直したい */
+					return (conv_pos + strlen(RomCana[j].aft_str) + (strlen(RomCana[j].pre_str) - RomCana[j].replace_size));
 				}
 			}
 
