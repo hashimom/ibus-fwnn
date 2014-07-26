@@ -2,12 +2,12 @@
 <!-- filename: enchant.xml -->
 <component>
 	<name>org.freedesktop.IBus.Fwnn</name>
-	<description>Enchant Component</description>
+	<description>FreeWnn Component</description>
 	<exec>${libexecdir}/ibus-engine-fwnn --ibus</exec>
 	<version>@VERSION@</version>
-	<author>Peng Huang &lt;shawn.p.huang@gmail.com&gt;</author>
+	<author>Hashimoto Masahiko &lt;hashimom@geeko.jp&gt;</author>
 	<license>GPL</license>
-	<homepage>http://code.google.com/p/ibus</homepage>
+	<homepage>https://github.com/hashimom/ibus-fwnn</homepage>
 	<textdomain>ibus-fwnn</textdomain>
 
 	<engines>
@@ -15,11 +15,11 @@
 			<name>fwnn</name>
 			<language>ja</language>
 			<license>GPL</license>
-			<author>Peng Huang &lt;shawn.p.huang@gmail.com&gt;</author>
+			<author>Hashimoto Masahiko &lt;hashimom@geeko.jp&gt;</author>
 			<icon>${pkgdatadir}/icons/ibus-fwnn.svg</icon>
 			<layout>jp</layout>
-			<longname>Fwnn</longname>
-			<description>Enchant Input Method</description>
+			<longname>FreeWnn</longname>
+			<description>FreeWnn Input Method</description>
 			<rank>0</rank>
 		</engine>
 	</engines>
