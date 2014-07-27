@@ -34,7 +34,7 @@ init (void)
 	ibus_init ();
 
 	component = ibus_component_new ("org.freedesktop.IBus.Fwnn",
-									"Fwnn",
+									"FreeWnn Component",
 									"0.1.0",
 									"GPL",
 									"Hashimoto Masahiko <hashimom@geeko.jp>",
@@ -42,8 +42,8 @@ init (void)
 									"",
 									"ibus-fwnn");
      desc = ibus_engine_desc_new (	"fwnn",
-									"Fwnn",
-									"Fwnn",
+									"FreeWnn",
+									"FreeWnn Component",
 									"ja",
 									"GPL",
 									"Hashimoto Masahiko <hashimom@geeko.jp>",
