@@ -1,0 +1,2 @@
+/* access file */
+#define PKGDATADIR "@IBUS_FWNN_ROOT_DIR@"

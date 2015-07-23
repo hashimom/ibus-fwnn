@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <ibus.h>
 #include "engine.h"
+#include "config.h"
 
 static IBusBus *bus = NULL;
 static IBusFactory *factory = NULL;
@@ -84,5 +85,6 @@ int main(int argc, char **argv)
 
 	/* Go */
 	init ();
+	printf("main init end-->\n");
 	ibus_main ();
 }

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iconv.h>
-#include "wnn/jslib.h"
+#include <wnn/jslib.h>
 
 #include "fwnnserver.h"
 

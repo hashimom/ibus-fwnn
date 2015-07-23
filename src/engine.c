@@ -1,5 +1,5 @@
 /* vim:set et sts=4: */
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
@@ -88,9 +88,9 @@ ibus_fwnn_engine_init (IBusFwnnEngine *fwnn)
 	openlog("ibus-fwnn", LOG_PID, LOG_USER);
 	ret = fwnnserver_open();
 	if (ret == 0) {
-		syslog(LOG_INFO, "ibus_fwnn_engine init OK");
+		printf("ibus_fwnn_engine init OK\n");
 	} else {
-		syslog(LOG_ERR, "ibus_fwnn_engine init FAILED");
+		printf("ibus_fwnn_engine init FAILED\n");
 	}
 	fwnn->preedit = g_string_new ("");
 	fwnn->cursor_pos = 0;
@@ -106,9 +106,9 @@ ibus_fwnn_engine_destroy (IBusFwnnEngine *fwnn)
 	
 	ret = fwnnserver_close();
 	if (ret == 0) {
-		syslog(LOG_INFO, "ibus_fwnn_engine destroy OK");
+		printf("ibus_fwnn_engine destroy OK\n");
 	} else {
-		syslog(LOG_ERR, "ibus_fwnn_engine destroy FAILED");
+		printf("ibus_fwnn_engine destroy FAILED\n");
 	}
 	
 	if (fwnn->preedit) {
@@ -240,6 +240,8 @@ ibus_fwnn_engine_process_key_event (IBusEngine *engine,
 	IBusText *text;
 	IBusFwnnEngine *fwnn = (IBusFwnnEngine *)engine;
 
+	printf("keyevent=%d\n", keyval);
+
 	if (modifiers & IBUS_RELEASE_MASK)
 		return FALSE;
 
@@ -283,7 +285,7 @@ ibus_fwnn_engine_process_key_event (IBusEngine *engine,
 			return FALSE;
 		if (fwnn->cursor_pos < fwnn->preedit->len) {
 			target_len = conv_get_bytesize_nextstr(fwnn->preedit, fwnn->cursor_pos);
-			syslog(LOG_INFO, "IBUS_Right: %d + %d -> %d", fwnn->cursor_pos, target_len, (fwnn->cursor_pos + target_len));
+			printf("IBUS_Right: %d + %d -> %d\n", fwnn->cursor_pos, target_len, (fwnn->cursor_pos + target_len));
 			fwnn->cursor_pos = fwnn->cursor_pos + target_len;
 			ibus_fwnn_engine_update (fwnn);
 			
