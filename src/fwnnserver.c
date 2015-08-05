@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <iconv.h>
 #include <wnn/jslib.h>
 
@@ -46,7 +47,7 @@ static void set_wnn_env_pram()
 	js_param_set(wnnenv, &pa);
 }
 
-static void exec_iconv(const char *instr, const char *outstr, int ch)
+static void exec_iconv(char *instr, char *outstr, int ch)
 {
 	iconv_t cd;
 	size_t src_len = strlen(instr);
