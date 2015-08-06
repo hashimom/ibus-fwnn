@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <syslog.h>
+#include <stdlib.h>
 #include "convert.h"
 
 typedef struct {

@@ -16,6 +16,7 @@ struct _IBusFwnnEngine {
 
     /* members */
     GString *preedit;
+    GString *convedit;
     gint cursor_pos;
 
     IBusLookupTable *table;
@@ -35,6 +36,7 @@ static gboolean
                                              guint               	 keyval,
                                              guint               	 keycode,
                                              guint               	 modifiers);
+#if 0
 static void ibus_fwnn_engine_focus_in    (IBusEngine             *engine);
 static void ibus_fwnn_engine_focus_out   (IBusEngine             *engine);
 static void ibus_fwnn_engine_reset       (IBusEngine             *engine);
@@ -61,6 +63,7 @@ static void ibus_fwnn_engine_property_show
 static void ibus_fwnn_engine_property_hide
 											(IBusEngine             *engine,
                                              const gchar            *prop_name);
+#endif
 
 static void ibus_fwnn_engine_update      (IBusFwnnEngine      *fwnn);
 
@@ -93,6 +96,7 @@ ibus_fwnn_engine_init (IBusFwnnEngine *fwnn)
 		printf("ibus_fwnn_engine init FAILED\n");
 	}
 	fwnn->preedit = g_string_new ("");
+	fwnn->convedit = g_string_new ("");
 	fwnn->cursor_pos = 0;
 
 	fwnn->table = ibus_lookup_table_new (9, 0, TRUE, TRUE);
@@ -113,6 +117,7 @@ ibus_fwnn_engine_destroy (IBusFwnnEngine *fwnn)
 	
 	if (fwnn->preedit) {
 		g_string_free (fwnn->preedit, TRUE);
+		g_string_free (fwnn->convedit, TRUE);
 		fwnn->preedit = NULL;
 	}
 
@@ -124,6 +129,7 @@ ibus_fwnn_engine_destroy (IBusFwnnEngine *fwnn)
 	((IBusObjectClass *) ibus_fwnn_engine_parent_class)->destroy ((IBusObject *)fwnn);
 }
 
+#if 0
 static void
 ibus_fwnn_engine_update_lookup_table (IBusFwnnEngine *fwnn)
 {
@@ -157,25 +163,29 @@ ibus_fwnn_engine_update_lookup_table (IBusFwnnEngine *fwnn)
 //    if (sugs)
 //        fwnn_dict_free_suggestions (dict, sugs);
 }
+#endif
 
 static gboolean
 ibus_fwnn_engine_kanren (IBusFwnnEngine *fwnn)
 {
 	IBusText *text;
-	char *kanren_p = NULL;
+	unsigned char *kanren_p = NULL;
 	gint retval;
 
 	kanren_p = fwnnserver_kanren(fwnn->preedit->str);
 	text = ibus_text_new_from_static_string (kanren_p);
-	g_string_assign (fwnn->preedit, text->text);
-	ibus_text_append_attribute(text, IBUS_ATTR_TYPE_FOREGROUND, 0x00FFFF, 0, fwnn->preedit->len);
+	g_string_assign (fwnn->convedit, text->text);
+
+	text->attrs = ibus_attr_list_new ();
+	ibus_attr_list_append (text->attrs,
+		ibus_attr_underline_new (IBUS_ATTR_UNDERLINE_SINGLE, 0, fwnn->convedit->len));
+
 	ibus_engine_update_preedit_text ((IBusEngine *)fwnn,
 										text,
 										fwnn->cursor_pos,
 										TRUE);
 
 	ibus_engine_hide_lookup_table ((IBusEngine *)fwnn);
-
 	return TRUE;
 }
 
@@ -188,9 +198,10 @@ ibus_fwnn_engine_commit (IBusFwnnEngine *fwnn)
 	if (fwnn->preedit->len == 0)
 		return FALSE;
 
-	text = ibus_text_new_from_static_string (fwnn->preedit->str);
+	text = ibus_text_new_from_static_string (fwnn->convedit->str);
 	ibus_engine_commit_text ((IBusEngine *)fwnn, text);
 	g_string_assign (fwnn->preedit, "");
+	g_string_assign (fwnn->convedit, "");
 	fwnn->cursor_pos = 0;
 
 	ibus_fwnn_engine_update (fwnn);
@@ -337,7 +348,7 @@ ibus_fwnn_engine_process_key_event (IBusEngine *engine,
 							fwnn->cursor_pos,
 							keyval);
 		fwnn->cursor_pos = conv_run_romajiconv(fwnn->preedit, fwnn->cursor_pos);
-		ibus_fwnn_engine_update (fwnn);
+		ibus_fwnn_engine_kanren(fwnn);
         
 		return TRUE;
 	}

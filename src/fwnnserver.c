@@ -18,7 +18,7 @@
 #define PC_DIC		"pubdic/computer.dic"
 #define SYMBOL_DIC	"pubdic/symbol.dic"
 
-#define MAX_CONV_STRLEN	(4096)
+#define MAX_CONV_STRLEN	(1024)
 #define CONV_UTF82EUC	(0)
 #define CONV_EUC2UTF8	(1)
 
@@ -27,7 +27,9 @@ static WNN_ENV *wnnenv;
 static struct wnn_ret_buf wnnbuf= {0, NULL};
 
 /* もちろん仮。malloc して返すように変更する予定 */
-static char wnn_out_kanstr[MAX_CONV_STRLEN];
+static unsigned char wnn_yomi_buf[MAX_CONV_STRLEN];
+static unsigned char wnn_out_kanstr[MAX_CONV_STRLEN];
+
 
 static void set_wnn_env_pram()
 {
@@ -76,7 +78,7 @@ static void strtows(w_char *u, unsigned char *e)
 	*u=0;
 }
 
-static int putws(unsigned short *s, char *outstr)
+static int putws(unsigned short *s, unsigned char *outstr)
 {
 	int ret = 0;
 	
@@ -93,8 +95,8 @@ static void output_js2char(struct wnn_dai_bunsetsu *dlist, int cnt)
 {
 	int i, tmpbuf_len;
 	struct wnn_sho_bunsetsu  *sbn;
-	char kanstr_tmp[MAX_CONV_STRLEN];
-	char kanstr_utf8[MAX_CONV_STRLEN];
+	unsigned char kanstr_tmp[MAX_CONV_STRLEN];
+	unsigned char kanstr_utf8[MAX_CONV_STRLEN];
 
     for ( ; cnt > 0; dlist++, cnt --) {
 		sbn = dlist->sbn;
@@ -169,12 +171,20 @@ int fwnnserver_adddic(char *dicfilename)
 	return dicno;
 }
 
-char *fwnnserver_kanren(char *yomi)
+unsigned char *fwnnserver_kanren(unsigned char *yomi)
 {
 	// とりあえずサイズ決め打ち
-	char yomi_euc[MAX_CONV_STRLEN];
+	unsigned char yomi_euc[MAX_CONV_STRLEN];
 	w_char upstrings[MAX_CONV_STRLEN];
 	int count = 0;
+	int i=0, yomilen = strlen(yomi);
+
+	// 未確定文字ポインタ（暫定実装で削除予定）
+	for (i = 0; i < yomilen;) {
+		if (yomi[i] < 0x7F)
+			break;
+		i += 3;
+	}
 	
 	memset(yomi_euc, 0, MAX_CONV_STRLEN);
 	memset(upstrings, 0, MAX_CONV_STRLEN);
@@ -183,8 +193,12 @@ char *fwnnserver_kanren(char *yomi)
 	exec_iconv(yomi, yomi_euc, CONV_UTF82EUC);
 	strtows(upstrings, yomi_euc);
 	
-	count = js_kanren(wnnenv, upstrings, WNN_ALL_HINSI, NULL, WNN_VECT_KANREN, WNN_VECT_NO, WNN_VECT_BUNSETSU,&wnnbuf);
+	count = js_kanren(wnnenv, upstrings, WNN_ALL_HINSI, NULL,
+			WNN_VECT_KANREN, WNN_VECT_NO, WNN_VECT_BUNSETSU,&wnnbuf);
 	output_js2char((struct wnn_dai_bunsetsu *)wnnbuf.buf, count);
+
+	if (i < yomilen)
+		strcat(wnn_out_kanstr, yomi+i);
 
 	return wnn_out_kanstr;
 }
